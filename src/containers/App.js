@@ -1,6 +1,6 @@
 import React, { Component } from "react";
 import { connect } from "react-redux";
-import { setSearchField } from "../actions";
+import { setSearchField, requestRobots } from "../actions";
 
 import CardList from "../components/CardList";
 import SearchBox from "../components/SearchBox";
@@ -10,39 +10,35 @@ import ErrorBoundary from "../components/ErrorBoundary";
 // defines what state to listen and send down as props
 const mapStateToProps = state => {
   return {
-    searchField: state.searchField,
+    searchField: state.searchRobots.searchField,
+    robots: state.requestRobots.robots,
+    isPending: state.requestRobots.isPending,
+    error: state.requestRobots.error
   };
 };
 
 // defines what props are actions to be dispatched
 const mapDispatchToProps = (dispatch) => {
   return {
-    onSearchChange: event => dispatch(setSearchField(event.target.value))
+    onSearchChange: event => dispatch(setSearchField(event.target.value)),
+    onRequestRobots:()=> dispatch(requestRobots())
   };
 };
 
 class App extends Component {
-  constructor(props) {
-    super(props);
-    this.state = {
-      robots: [],
-    };
-  }
   componentDidMount() {
-    fetch("https://jsonplaceholder.typicode.com/users")
-      .then(res => res.json())
-      .then(robots => this.setState({ robots: robots }));
+    this.props.onRequestRobots()
   }
+
   render() {
-    const {robots} = this.state;
-    const {searchField, onSearchChange} = this.props;
+    const {searchField, onSearchChange, robots, isPending} = this.props;
     const filteredRobots = robots.filter(robot => {
       return robot.name
         .toLowerCase()
         .includes(searchField.toLowerCase());
     });
 
-    if (robots.length === 0) {
+    if (isPending) {
       return <h1>Loading...</h1>;
     } else {
       return (
